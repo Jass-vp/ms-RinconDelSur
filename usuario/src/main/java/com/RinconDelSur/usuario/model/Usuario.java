@@ -41,9 +41,6 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String contrasena;
 
-    @Column(nullable = false, length = 60)
-    private String ciudad;
-
     @Column(name = "rol_id", nullable = false)
     private Long rolId;
 
