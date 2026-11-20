@@ -8,6 +8,7 @@ import com.RinconDelSur.conteo.model.Conteo;
 import com.RinconDelSur.conteo.repository.ConteoRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ConteoService {
@@ -25,34 +27,43 @@ public class ConteoService {
     private final UsuarioClient usuarioClient;
 
     public List<ConteoResponse> listar() {
+        log.info("Listando todos los registros de conteo ordenados por ID descendente");
         List<Conteo> conteos = conteoRepository.findAllByOrderByIdDesc();
         Map<String, String> puertas = puertaClient.listar().stream()
                 .collect(Collectors.toMap(PuertaDto::codigo, PuertaDto::nombre));
 
+        log.debug("Se encontraron {} conteos y {} puertas asociadas", conteos.size(), puertas.size());
         return conteos.stream()
                 .map(c -> aRespuesta(c, puertas.getOrDefault(c.getPuertaAcceso(), c.getPuertaAcceso())))
                 .toList();
     }
 
     public ConteoResponse registrar(ConteoRequest datos) {
+        log.info("Iniciando registro de conteo para puerta: {}, usuarioId: {}", datos.puertaAcceso(), datos.usuarioId());
+
         if (datos.puertaAcceso() == null || datos.puertaAcceso().isBlank()) {
+            log.warn("Intento de registro fallido: puerta de acceso vacía o nula");
             throw new PeticionInvalidaException("La puerta de acceso es obligatoria");
         }
         if (datos.cantidadTransito() == null || datos.cantidadClientes() == null) {
+            log.warn("Intento de registro fallido: cantidades de tránsito o clientes nulas");
             throw new PeticionInvalidaException("Las cantidades son obligatorias");
         }
 
         PuertaDto puerta = puertaClient.obtener(datos.puertaAcceso());
         if (puerta == null) {
+            log.warn("Validación fallida: la puerta '{}' no existe en el microservicio de puertas", datos.puertaAcceso());
             throw new PeticionInvalidaException("La puerta de acceso indicada no existe");
         }
         if (Boolean.FALSE.equals(puerta.estaHabilitado())) {
+            log.warn("Validación fallida: la puerta '{}' se encuentra deshabilitada", datos.puertaAcceso());
             throw new PeticionInvalidaException("La puerta de acceso se encuentra deshabilitada");
         }
 
         if (datos.usuarioId() != null && datos.usuarioId() > 0) {
             UsuarioDto usuario = usuarioClient.obtener(datos.usuarioId());
             if (usuario == null) {
+                log.warn("Validación fallida: el usuario con ID {} no existe", datos.usuarioId());
                 throw new PeticionInvalidaException("El usuario indicado no existe");
             }
         }
@@ -68,10 +79,14 @@ public class ConteoService {
                 .usuarioId(datos.usuarioId())
                 .build();
 
-        return aRespuesta(conteoRepository.save(nuevo), puerta.nombre());
+        Conteo guardado = conteoRepository.save(nuevo);
+        log.info("Conteo registrado exitosamente con ID: {} en puerta: {}", guardado.getId(), puerta.nombre());
+
+        return aRespuesta(guardado, puerta.nombre());
     }
 
     public List<DatoGraficoResponse> obtenerFlujoPorHora() {
+        log.info("Calculando métricas de flujo de clientes por hora");
         List<Conteo> conteos = conteoRepository.findAll();
         Map<String, Integer> porHora = new LinkedHashMap<>();
 
@@ -85,6 +100,7 @@ public class ConteoService {
     }
 
     public List<DatoGraficoResponse> obtenerSegmentacion() {
+        log.info("Calculando segmentación entre tránsito total y clientes efectivos");
         List<Conteo> conteos = conteoRepository.findAll();
         int totalTransito = conteos.stream().mapToInt(Conteo::getCantidadTransito).sum();
         int totalClientes = conteos.stream().mapToInt(Conteo::getCantidadClientes).sum();
@@ -96,6 +112,7 @@ public class ConteoService {
     }
 
     public List<DatoGraficoResponse> obtenerFlujoPorTurno() {
+        log.info("Calculando distribución de clientes por turno (Mañana vs Tarde)");
         List<Conteo> conteos = conteoRepository.findAll();
         int manana = 0;
         int tarde = 0;
@@ -108,7 +125,8 @@ public class ConteoService {
                 } else {
                     tarde += c.getCantidadClientes();
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.debug("Formato de hora no numérico ('{}') en conteo ID {}, asignando a Turno Tarde", c.getHora(), c.getId());
                 tarde += c.getCantidadClientes();
             }
         }
