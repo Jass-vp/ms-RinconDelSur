@@ -59,8 +59,7 @@ public class SolicitudCorreoController {
             @ApiResponse(responseCode = "404", description = "No existe ninguna solicitud pendiente para el RUT indicado")
     })
     public SolicitudCorreoResponse obtenerPendientePorRut(
-            @Parameter(description = "RUT del usuario a consultar", example = "18.456.789-2")
-            @PathVariable String rut) {
+            @Parameter(description = "RUT del usuario a consultar", example = "18.456.789-2") @PathVariable String rut) {
         log.debug("GET /api/solicitudes-correo/pendientes/{}", rut);
         return solicitudCorreoService.obtenerPendientePorRut(rut);
     }
@@ -73,10 +72,8 @@ public class SolicitudCorreoController {
             @ApiResponse(responseCode = "404", description = "Solicitud no encontrada con el ID especificado")
     })
     public void resolver(
-            @Parameter(description = "Identificador único de la solicitud", example = "1")
-            @PathVariable Long id,
-            @Parameter(description = "Indica si la solicitud es aprobada (true) o rechazada (false)", example = "true")
-            @RequestParam boolean aprobar) {
+            @Parameter(description = "Identificador único de la solicitud", example = "1") @PathVariable Long id,
+            @Parameter(description = "Indica si la solicitud es aprobada (true) o rechazada (false)", example = "true") @RequestParam boolean aprobar) {
         log.info("PUT /api/solicitudes-correo/{}/resolver - aprobar: {}", id, aprobar);
         solicitudCorreoService.resolver(id, aprobar);
     }
