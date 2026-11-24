@@ -156,6 +156,8 @@
 						<exclude>**/dto/**</exclude>
 						<exclude>**/model/**</exclude>
 						<exclude>**/exception/**</exclude>
+						<exclude>**/client/**</exclude>
+						<exclude>**/configuration/**</exclude>
 						<exclude>**/*Application.class</exclude>
 					</excludes>
 				</configuration>

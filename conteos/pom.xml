@@ -123,6 +123,8 @@
 						<exclude>**/dto/**</exclude>
 						<exclude>**/model/**</exclude>
 						<exclude>**/exception/**</exclude>
+						<exclude>**/config/**</exclude>
+						<exclude>**/client/**</exclude>
 						<exclude>**/*Application.class</exclude>
 					</excludes>
 				</configuration>
