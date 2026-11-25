@@ -24,7 +24,7 @@ spring:
             - id: usuario-service
               uri: lb://USUARIO
               predicates:
-                - Path=/api/usuarios/**, /api/usuario/**
+                - Path=/api/usuarios/**, /api/usuario/**, /api/solicitudes-correo/**
             - id: notificaciones-service
               uri: lb://NOTIFICACIONES
               predicates:
