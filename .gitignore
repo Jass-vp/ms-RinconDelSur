@@ -1,0 +1,11 @@
+# Carpetas compiladas de Maven (en todos los microservicios)
+target/
+**/target/
+
+# Archivos de IDEs
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
